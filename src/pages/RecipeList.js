@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api'; // Use the configured axios instance
-import { useAuth } from '../auth/AuthContext';
-import RecipeCard from '../components/RecipeCard'; // Assuming RecipeCard is in components folder
+import api from '../api/index.js'; 
+
+import { useAuth } from '../auth/AuthContext.js'; // PASTIKAN FILE INI ADA DI src/auth/AuthContext.js
+import RecipeCard from '../components/RecipeCard.js'; // PASTIKAN FILE INI ADA DI src/components/RecipeCard.js
 
 const RecipeList = () => {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const { user, isLoggedIn } = useAuth(); // Get user and isLoggedIn status
+    const { user, isLoggedIn } = useAuth(); 
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -25,6 +26,11 @@ const RecipeList = () => {
     }, []);
 
     const handleDelete = async (id) => {
+        if (!isLoggedIn || user?.role !== 'admin') {
+            alert('Anda tidak diizinkan untuk menghapus resep.');
+            return; 
+        }
+
         if (window.confirm('Apakah Anda yakin ingin menghapus resep ini?')) {
             try {
                 await api.delete(`/recipes/${id}`);
@@ -41,6 +47,7 @@ const RecipeList = () => {
     if (loading) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Memuat resep...</div>;
     if (error) return <div style={{ textAlign: 'center', color: 'red', marginTop: '2rem' }}>{error}</div>;
 
+    // isAdmin akan menentukan apakah tombol edit/hapus terlihat di RecipeCard
     const isAdmin = isLoggedIn && user?.role === 'admin';
 
     return (

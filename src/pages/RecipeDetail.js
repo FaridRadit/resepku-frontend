@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api/index.js'; // Pastikan jalur ini benar
-import { useAuth } from '../auth/AuthContext.js'; // Pastikan jalur ini benar
-import CommentSection from '../components/CommentSection.js'; // Pastikan jalur ini benar
-import RatingStars from '../components/RatingStars.js'; // Pastikan jalur ini benar
+import api from '../api/index.js';
+import { useAuth } from '../auth/AuthContext';
+import CommentSection from '../components/CommentSection';
+import RatingStars from '../components/RatingStars';
 
 const RecipeDetail = () => {
     const { id } = useParams();
@@ -129,6 +129,37 @@ const RecipeDetail = () => {
         }
     };
 
+    // Fungsi untuk merender bintang rata-rata dengan dukungan nilai desimal
+    const renderAverageStars = (avg) => {
+        const fullStars = Math.floor(avg);
+        const halfStar = avg % 1 !== 0; // Cek apakah ada desimal
+        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                {[...Array(fullStars)].map((_, i) => (
+                    <span key={`full-${i}`} style={{ color: '#ffc107', fontSize: '1.5rem' }}>&#9733;</span> // Bintang penuh
+                ))}
+                {halfStar && (
+                    <span key="half" style={{
+                        position: 'relative',
+                        width: '1.5rem', // Ukuran bintang
+                        height: '1.5rem',
+                        overflow: 'hidden',
+                        display: 'inline-block'
+                    }}>
+                        <span style={{ color: '#ffc107', fontSize: '1.5rem', position: 'absolute', left: 0, width: '50%', overflow: 'hidden' }}>&#9733;</span> {/* Setengah bintang kuning */}
+                        <span style={{ color: '#e4e5e9', fontSize: '1.5rem', position: 'absolute', left: 0 }}>&#9733;</span> {/* Bintang kosong di bawah */}
+                    </span>
+                )}
+                {[...Array(emptyStars)].map((_, i) => (
+                    <span key={`empty-${i}`} style={{ color: '#e4e5e9', fontSize: '1.5rem' }}>&#9733;</span> // Bintang kosong
+                ))}
+            </div>
+        );
+    };
+
+
     if (loading) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Memuat resep...</div>;
     if (error) return <div style={{ textAlign: 'center', color: 'red', marginTop: '2rem' }}>{error}</div>;
     if (!recipe) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Resep tidak ditemukan.</div>;
@@ -147,6 +178,9 @@ const RecipeDetail = () => {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                 <p style={{ margin: 0 }}>Rating Rata-rata: {averageRating.toFixed(1)} / 5</p>
+                {renderAverageStars(averageRating)} {/* Menampilkan bintang rata-rata */}
+                {/* Komponen RatingStars di bawah ini adalah untuk pengguna memberi/mengubah rating mereka sendiri */}
+                <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Rating Anda:</span>
                 <RatingStars recipeId={recipe.id} initialRating={userRating} onRatingChange={handleRatingChange} />
                 {isLoggedIn && ( // Hanya tampilkan tombol bookmark jika pengguna sudah login
                     <>

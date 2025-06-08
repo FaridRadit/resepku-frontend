@@ -11,8 +11,6 @@ const CommentSection = ({ recipeId }) => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
-    // Membungkus fetchComments dengan useCallback untuk menstabilkan referensinya
     const fetchComments = useCallback(async (pageNumber = 1) => {
         setLoading(true);
         setError('');
@@ -27,7 +25,7 @@ const CommentSection = ({ recipeId }) => {
         } finally {
             setLoading(false);
         }
-    }, [recipeId]); // fetchComments bergantung pada recipeId
+    }, [recipeId]); 
 
     useEffect(() => {
         fetchComments();
