@@ -1,48 +1,80 @@
 import React, { useEffect, useState } from 'react';
-import { useParams,Link } from 'react-router-dom'; // Menghapus useNavigate
-import api from '../api/index.js';
+import { useParams, Link } from 'react-router-dom'; // Menambahkan Link untuk admin
+import api from '../api/index.js'; // Memastikan jalur impor yang eksplisit
 import { useAuth } from '../auth/AuthContext.js';
 import CommentSection from '../components/CommentSection.js';
 import RatingStars from '../components/RatingStars.js';
 
 const RecipeDetail = () => {
     const { id } = useParams();
-    // const navigate = useNavigate(); // Menghapus ini karena tidak digunakan
     const { isLoggedIn, user } = useAuth();
     const [recipe, setRecipe] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [averageRating, setAverageRating] = useState(0);
-    const [userRating, setUserRating] = useState(0); // For user's own rating
-    const [isBookmarked, setIsBookmarked] = useState(false); // To track bookmark status
+    const [userRating, setUserRating] = useState(0); // Untuk rating pengguna sendiri
+    const [isBookmarked, setIsBookmarked] = useState(false); // Untuk melacak status bookmark
 
     const fetchRecipeAndData = async () => {
         setLoading(true);
+        setError(''); // Reset error message
+
         try {
+            // Fetch main recipe data
             const recipeRes = await api.get(`/recipes/${id}`);
             setRecipe(recipeRes.data);
+            console.log('Resep berhasil dimuat:', recipeRes.data);
 
+            // Fetch average rating
             const avgRatingRes = await api.get(`/ratings/recipe/${id}`);
             setAverageRating(avgRatingRes.data.average);
+            console.log('Rating rata-rata berhasil dimuat:', avgRatingRes.data);
 
             if (isLoggedIn) {
                 // Check if user has rated this specific recipe
-                const userRatingsRes = await api.get('/ratings/my');
-                const foundUserRating = userRatingsRes.data.find(r => r.recipeId === parseInt(id));
-                setUserRating(foundUserRating ? foundUserRating.rating : 0);
+                try {
+                    const userRatingsRes = await api.get('/ratings/my');
+                    const foundUserRating = userRatingsRes.data.find(r => r.recipeId === parseInt(id));
+                    setUserRating(foundUserRating ? foundUserRating.rating : 0);
+                    console.log('Rating pengguna berhasil dimuat:', userRatingsRes.data);
+                } catch (err) {
+                    console.error('Gagal memuat rating pengguna:', err.response?.data || err.message);
+                    // Lanjutkan eksekusi meskipun rating pengguna gagal dimuat
+                }
 
                 // Check if user has bookmarked this recipe
-                const userBookmarksRes = await api.get('/bookmarks');
-                const foundBookmark = userBookmarksRes.data.some(b => b.recipeId === parseInt(id));
-                setIsBookmarked(foundBookmark);
+                try {
+                    const userBookmarksRes = await api.get('/bookmarks');
+                    const foundBookmark = userBookmarksRes.data.some(b => b.recipeId === parseInt(id));
+                    setIsBookmarked(foundBookmark);
+                    console.log('Bookmark pengguna berhasil dimuat:', userBookmarksRes.data);
+                } catch (err) {
+                    console.error('Gagal memuat bookmark pengguna:', err.response?.data || err.message);
+                    // Lanjutkan eksekusi meskipun bookmark pengguna gagal dimuat
+                }
             } else {
                 setUserRating(0);
                 setIsBookmarked(false);
             }
 
         } catch (err) {
-            console.error('Gagal memuat resep atau data:', err);
-            setError('Gagal memuat resep atau data terkait.');
+            // Tangani error secara umum dan log objek error lengkap
+            console.error('Terjadi kesalahan saat memuat data resep:', err);
+            if (err.response) {
+                // Error dari server (misalnya, status code 4xx, 5xx)
+                console.error('Data Respons Error:', err.response.data);
+                console.error('Status Error:', err.response.status);
+                console.error('Headers Error:', err.response.headers);
+                setError(`Gagal memuat resep: ${err.response.data.message || err.message}. Mohon periksa backend.`);
+            } else if (err.request) {
+                // Permintaan dibuat tetapi tidak ada respons yang diterima
+                console.error('Permintaan Error:', err.request);
+                setError('Tidak ada respons dari server. Server mungkin tidak berjalan atau ada masalah jaringan.');
+            } else {
+                // Sesuatu terjadi dalam penyiapan permintaan yang memicu Error
+                console.error('Pesan Error:', err.message);
+                setError(`Terjadi kesalahan saat memuat resep: ${err.message}.`);
+            }
         } finally {
             setLoading(false);
         }
@@ -54,7 +86,7 @@ const RecipeDetail = () => {
 
     const handleRatingChange = (newRating) => {
         setUserRating(newRating);
-        // A small delay and re-fetch of average rating to reflect change
+        // Penundaan kecil dan pengambilan ulang rating rata-rata untuk mencerminkan perubahan
         setTimeout(async () => {
             try {
                 const avgRatingRes = await api.get(`/ratings/recipe/${id}`);
