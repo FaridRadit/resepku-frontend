@@ -13,9 +13,9 @@ const Navbar = () => {
 
     return (
         <nav style={{ padding: '1rem', background: '#333', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '1.5rem' }}>ResepAmba</Link>
+            <Link to="/login" style={{ color: 'white', textDecoration: 'none', fontSize: '1.5rem' }}>ResepAmba</Link>
             <div>
-                <Link to="/" style={{ color: 'white', textDecoration: 'none', marginLeft: '1rem' }}>Resep</Link>
+                <Link to="/recipes" style={{ color: 'white', textDecoration: 'none', marginLeft: '1rem' }}>Resep</Link>
                 {isLoggedIn ? (
                     <>
                         {user?.role === 'admin' && ( //

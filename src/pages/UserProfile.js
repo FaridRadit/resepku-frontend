@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/index.js';
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from '../auth/AuthContext.js';
 
 const UserProfile = () => {
-    const { user, isLoggedIn, setUser } = useAuth(); // Assuming setUser is exposed by AuthContext
+    const { user, isLoggedIn, setUser } = useAuth(); // Mengasumsikan setUser diekspos oleh AuthContext
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
@@ -13,18 +13,24 @@ const UserProfile = () => {
     useEffect(() => {
         if (isLoggedIn && user) {
             setName(user.name || '');
-            setEmail(user.email || ''); // Email is not editable, but good to display
+            setEmail(user.email || ''); // Email tidak dapat diedit, tetapi bagus untuk ditampilkan
             setLoading(false);
         } else if (!isLoggedIn && !user) {
             setError('Anda harus login untuk melihat profil.');
             setLoading(false);
         }
-    }, [isLoggedIn, user]);
+    }, [isLoggedIn, user, setUser]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
+
+        // Hanya izinkan jika pengguna sudah login
+        if (!isLoggedIn) {
+            setError('Anda harus login untuk memperbarui profil Anda.');
+            return;
+        }
 
         if (!name.trim()) {
             setError('Nama tidak boleh kosong.');
@@ -34,13 +40,13 @@ const UserProfile = () => {
         try {
             const response = await api.patch('/users/editProfile', { name });
             setSuccess(response.data.message);
-            // Update user data in AuthContext and localStorage
+            // Perbarui data pengguna di AuthContext dan localStorage
             if (response.data.user) {
-                setUser(response.data.user); // Update the user in AuthContext
+                setUser(response.data.user); // Perbarui pengguna di AuthContext
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             }
         } catch (err) {
-            console.error('Failed to update profile:', err.response?.data?.message || err.message);
+            console.error('Gagal memperbarui profil:', err.response?.data?.message || err.message);
             setError('Gagal memperbarui profil: ' + (err.response?.data?.message || 'Silakan coba lagi.'));
         }
     };
@@ -54,14 +60,15 @@ const UserProfile = () => {
             {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
             {success && <p style={{ color: 'green', textAlign: 'center' }}>{success}</p>}
             
-            {user ? (
+            {/* Tampilkan form hanya jika pengguna sudah login */}
+            {user && isLoggedIn ? (
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email:</label>
                         <input
                             type="email"
                             value={email}
-                            disabled // Email is not editable
+                            disabled // Email tidak dapat diedit
                             style={{ padding: '0.8rem', border: '1px solid #ccc', borderRadius: '5px', width: '100%', background: '#f0f0f0' }}
                         />
                     </div>
@@ -83,7 +90,7 @@ const UserProfile = () => {
                     </button>
                 </form>
             ) : (
-                <p style={{ textAlign: 'center' }}>Tidak ada data pengguna.</p>
+                <p style={{ textAlign: 'center' }}>Silakan login untuk mengelola profil Anda.</p>
             )}
         </div>
     );

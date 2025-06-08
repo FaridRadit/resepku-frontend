@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.js';
 
 const MyBookmarks = () => {
-    const { isLoggedIn } = useAuth(); // Menghapus 'user'
+    const { isLoggedIn } = useAuth();
     const [bookmarks, setBookmarks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Cek langsung status login saat komponen dimuat
         if (!isLoggedIn) {
             setError('Anda harus login untuk melihat bookmark Anda.');
             setLoading(false);
@@ -22,15 +23,19 @@ const MyBookmarks = () => {
                 setBookmarks(response.data);
             } catch (err) {
                 console.error('Gagal memuat bookmark:', err);
-                setError('Gagal memuat bookmark Anda.');
+                setError('Gagal memuat bookmark Anda. Silakan coba lagi nanti.');
             } finally {
                 setLoading(false);
             }
         };
         fetchBookmarks();
-    }, [isLoggedIn]);
+    }, [isLoggedIn]); // Bergantung pada status login
 
     const handleRemoveBookmark = async (recipeId) => {
+        if (!isLoggedIn) { // Pengecekan keamanan tambahan
+            alert('Anda harus login untuk menghapus bookmark.');
+            return;
+        }
         if (window.confirm('Apakah Anda yakin ingin menghapus bookmark ini?')) {
             try {
                 await api.delete(`/bookmarks/${recipeId}`);
@@ -45,7 +50,8 @@ const MyBookmarks = () => {
 
     if (loading) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Memuat bookmark...</div>;
     if (error) return <div style={{ textAlign: 'center', color: 'red', marginTop: '2rem' }}>{error}</div>;
-    if (!isLoggedIn) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Silakan login untuk melihat bookmark Anda.</div>;
+    // Tampilkan pesan khusus jika tidak login
+    if (!isLoggedIn) return <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '1.2rem' }}>Silakan login untuk melihat bookmark Anda.</div>;
 
 
     return (

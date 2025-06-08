@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/index.js';
+import { useAuth } from '../auth/AuthContext.js'; // Import useAuth
 
 const EditRecipe = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isLoggedIn, user } = useAuth(); // Dapatkan status login dan pengguna
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [time, setTime] = useState('');
-    const [image, setImage] = useState(null); // For new image file
-    const [currentImageUrl, setCurrentImageUrl] = useState(''); // To display current image
+    const [image, setImage] = useState(null); // Untuk file gambar baru
+    const [currentImageUrl, setCurrentImageUrl] = useState(''); // Untuk menampilkan gambar saat ini
     const [ingredients, setIngredients] = useState([]);
     const [instructions, setInstructions] = useState([]);
     const [error, setError] = useState('');
@@ -29,7 +31,7 @@ const EditRecipe = () => {
                 setIngredients(recipeData.ingredients || []);
                 setInstructions(recipeData.instructions || []);
             } catch (err) {
-                console.error('Failed to fetch recipe for editing:', err);
+                console.error('Gagal memuat resep untuk diedit:', err);
                 setError('Gagal memuat resep untuk diedit.');
             } finally {
                 setLoading(false);
@@ -48,15 +50,9 @@ const EditRecipe = () => {
         setIngredients(newIngredients);
     };
 
-    const handleRemoveIngredient = async (index, ingredientId) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus bahan ini?')) {
-            const newIngredients = ingredients.filter((_, i) => i !== index);
-            setIngredients(newIngredients);
-            // If the ingredient already existed in DB, you might want to send a DELETE request for it
-            // This backend doesn't seem to have a dedicated ingredient DELETE endpoint,
-            // so we rely on the PATCH request to update the list of ingredients.
-            // If a dedicated endpoint exists, call it here.
-        }
+    const handleRemoveIngredient = (index) => {
+        const newIngredients = ingredients.filter((_, i) => i !== index);
+        setIngredients(newIngredients);
     };
 
     const handleAddInstruction = () => {
@@ -69,12 +65,9 @@ const EditRecipe = () => {
         setInstructions(newInstructions);
     };
 
-    const handleRemoveInstruction = async (index, instructionId) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus instruksi ini?')) {
-            const newInstructions = instructions.filter((_, i) => i !== index);
-            setInstructions(newInstructions);
-            // Same as ingredients, rely on PATCH or call dedicated DELETE endpoint if available
-        }
+    const handleRemoveInstruction = (index) => {
+        const newInstructions = instructions.filter((_, i) => i !== index);
+        setInstructions(newInstructions);
     };
 
 
@@ -83,31 +76,36 @@ const EditRecipe = () => {
         setError('');
         setSubmitting(true);
 
+        // Hanya izinkan jika pengguna sudah login dan merupakan admin (cek tambahan)
+        if (!isLoggedIn || user?.role !== 'admin') {
+            setError('Anda tidak diizinkan untuk memperbarui resep ini.');
+            setSubmitting(false);
+            return;
+        }
+
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
         formData.append('time', time);
-        if (image) { // Only append if a new image is selected
+        if (image) { // Hanya tambahkan jika gambar baru dipilih
             formData.append('image', image);
         }
 
-        // Backend currently only updates title, description, time, and image.
-        // It doesn't have an endpoint to update ingredients and instructions directly via PATCH recipe/:id.
-        // For a full update, you'd need separate PATCH/PUT endpoints for ingredients and instructions
-        // or a more complex recipe update logic in your backend controller.
-        // For this example, we'll only send the main recipe details.
-        // To update ingredients/instructions, you'd need to send them as separate API calls
-        // or modify your backend's updateRecipe to handle nested updates.
+        // Penting: Seperti yang dicatat sebelumnya, controller updateRecipe backend Anda
+        // saat ini hanya memperbarui title, description, time, dan image.
+        // Ini TIDAK memiliki logika untuk memperbarui bahan atau instruksi terkait
+        // secara langsung melalui endpoint PATCH /recipes/:id.
+        // Untuk pembaruan penuh termasuk bahan dan instruksi, Anda perlu
+        // memodifikasi backend Anda untuk menangani pembaruan bersarang, atau memanggil API
+        // endpoint terpisah untuk bahan dan instruksi (jika tersedia).
 
-        // If your backend `updateRecipe` controller was modified to accept
-        // `ingredients` and `instructions` arrays, you'd include them like this:
-        // const validIngredients = ingredients.filter(ing => ing.name && ing.quantity && ing.unit);
-        // const validInstructions = instructions.filter(inst => inst.description).map((inst, idx) => ({
-        //     ...inst,
-        //     order: idx + 1
-        // }));
-        // formData.append('ingredients', JSON.stringify(validIngredients));
-        // formData.append('instructions', JSON.stringify(validInstructions));
+        const validIngredients = ingredients.filter(ing => ing.name && ing.quantity && ing.unit);
+        const validInstructions = instructions.filter(inst => inst.description).map((inst, idx) => ({
+            ...inst,
+            order: idx + 1
+        }));
+        formData.append('ingredients', JSON.stringify(validIngredients));
+        formData.append('instructions', JSON.stringify(validInstructions));
 
 
         try {
@@ -117,9 +115,9 @@ const EditRecipe = () => {
                 },
             });
             alert(response.data.message);
-            navigate(`/recipes/${id}`); // Go back to recipe detail
+            navigate(`/recipes/${id}`); // Kembali ke detail resep
         } catch (err) {
-            console.error('Failed to update recipe:', err.response?.data?.message || err.message);
+            console.error('Gagal memperbarui resep:', err.response?.data?.message || err.message);
             setError('Gagal memperbarui resep: ' + (err.response?.data?.message || 'Silakan coba lagi.'));
         } finally {
             setSubmitting(false);
@@ -209,7 +207,7 @@ const EditRecipe = () => {
                             />
                             <button
                                 type="button"
-                                onClick={() => handleRemoveIngredient(index, ingredient.id)}
+                                onClick={() => handleRemoveIngredient(index)}
                                 style={{ background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', padding: '0.6rem 0.8rem', cursor: 'pointer' }}
                             >
                                 Hapus
@@ -238,7 +236,7 @@ const EditRecipe = () => {
                             />
                             <button
                                 type="button"
-                                onClick={() => handleRemoveInstruction(index, instruction.id)}
+                                onClick={() => handleRemoveInstruction(index)}
                                 style={{ background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', padding: '0.6rem 0.8rem', cursor: 'pointer' }}
                             >
                                 Hapus

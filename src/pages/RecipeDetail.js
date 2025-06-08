@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom'; // Menambahkan Link untuk admin
-import api from '../api/index.js'; // Memastikan jalur impor yang eksplisit
-import { useAuth } from '../auth/AuthContext.js';
-import CommentSection from '../components/CommentSection.js';
-import RatingStars from '../components/RatingStars.js';
+import { useParams, Link } from 'react-router-dom';
+import api from '../api/index.js'; // Pastikan jalur ini benar
+import { useAuth } from '../auth/AuthContext.js'; // Pastikan jalur ini benar
+import CommentSection from '../components/CommentSection.js'; // Pastikan jalur ini benar
+import RatingStars from '../components/RatingStars.js'; // Pastikan jalur ini benar
 
 const RecipeDetail = () => {
     const { id } = useParams();
@@ -17,21 +17,21 @@ const RecipeDetail = () => {
 
     const fetchRecipeAndData = async () => {
         setLoading(true);
-        setError(''); // Reset error message
+        setError(''); // Reset pesan kesalahan
 
         try {
-            // Fetch main recipe data
+            // Ambil data resep utama
             const recipeRes = await api.get(`/recipes/${id}`);
             setRecipe(recipeRes.data);
             console.log('Resep berhasil dimuat:', recipeRes.data);
 
-            // Fetch average rating
+            // Ambil rating rata-rata
             const avgRatingRes = await api.get(`/ratings/recipe/${id}`);
             setAverageRating(avgRatingRes.data.average);
             console.log('Rating rata-rata berhasil dimuat:', avgRatingRes.data);
 
             if (isLoggedIn) {
-                // Check if user has rated this specific recipe
+                // Periksa apakah pengguna telah memberi rating resep ini
                 try {
                     const userRatingsRes = await api.get('/ratings/my');
                     const foundUserRating = userRatingsRes.data.find(r => r.recipeId === parseInt(id));
@@ -42,7 +42,7 @@ const RecipeDetail = () => {
                     // Lanjutkan eksekusi meskipun rating pengguna gagal dimuat
                 }
 
-                // Check if user has bookmarked this recipe
+                // Periksa apakah pengguna telah membookmark resep ini
                 try {
                     const userBookmarksRes = await api.get('/bookmarks');
                     const foundBookmark = userBookmarksRes.data.some(b => b.recipeId === parseInt(id));
@@ -82,7 +82,7 @@ const RecipeDetail = () => {
 
     useEffect(() => {
         fetchRecipeAndData();
-    }, [id, isLoggedIn]); // Re-fetch if id or login status changes
+    }, [id, isLoggedIn]); // Muat ulang jika id atau status login berubah
 
     const handleRatingChange = (newRating) => {
         setUserRating(newRating);
@@ -148,7 +148,7 @@ const RecipeDetail = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                 <p style={{ margin: 0 }}>Rating Rata-rata: {averageRating.toFixed(1)} / 5</p>
                 <RatingStars recipeId={recipe.id} initialRating={userRating} onRatingChange={handleRatingChange} />
-                {isLoggedIn && (
+                {isLoggedIn && ( // Hanya tampilkan tombol bookmark jika pengguna sudah login
                     <>
                         {!isBookmarked ? (
                             <button onClick={handleBookmark} style={{ padding: '0.5rem 1rem', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Bookmark</button>

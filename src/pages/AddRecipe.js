@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/index.js';
+import { useAuth } from '../auth/AuthContext'; // Import useAuth
 
 const AddRecipe = () => {
     const navigate = useNavigate();
+    const { isLoggedIn, user } = useAuth(); // Dapatkan status login dan pengguna
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [time, setTime] = useState('');
@@ -48,6 +50,13 @@ const AddRecipe = () => {
         setError('');
         setLoading(true);
 
+        // Hanya izinkan jika pengguna sudah login dan merupakan admin (cek tambahan)
+        if (!isLoggedIn || user?.role !== 'admin') {
+            setError('Anda tidak diizinkan untuk menambahkan resep.');
+            setLoading(false);
+            return;
+        }
+
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
@@ -60,11 +69,10 @@ const AddRecipe = () => {
             return;
         }
 
-        // Filter out empty ingredients/instructions before sending
         const validIngredients = ingredients.filter(ing => ing.name && ing.quantity && ing.unit);
         const validInstructions = instructions.filter(inst => inst.description).map((inst, idx) => ({
             ...inst,
-            order: idx + 1 // Add order to instructions
+            order: idx + 1
         }));
 
         formData.append('ingredients', JSON.stringify(validIngredients));
@@ -77,9 +85,9 @@ const AddRecipe = () => {
                 },
             });
             alert(response.data.message);
-            navigate('/'); // Navigate to home or recipe list
+            navigate('/recipes'); // Navigasi ke daftar resep setelah berhasil
         } catch (err) {
-            console.error('Failed to add recipe:', err.response?.data?.message || err.message);
+            console.error('Gagal menambahkan resep:', err.response?.data?.message || err.message);
             setError('Gagal menambahkan resep: ' + (err.response?.data?.message || 'Silakan coba lagi.'));
         } finally {
             setLoading(false);
