@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api/index.js';
+import api from '../api/index.js'; // PASTIKAN FILE INI ADA DI src/api/index.js
 import { Link } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext.js';
+import { useAuth } from '../auth/AuthContext.js'; // PASTIKAN FILE INI ADA DI src/auth/AuthContext.js
 
 const MyBookmarks = () => {
     const { isLoggedIn } = useAuth();
@@ -10,7 +10,6 @@ const MyBookmarks = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // Cek langsung status login saat komponen dimuat
         if (!isLoggedIn) {
             setError('Anda harus login untuk melihat bookmark Anda.');
             setLoading(false);
@@ -18,29 +17,44 @@ const MyBookmarks = () => {
         }
 
         const fetchBookmarks = async () => {
+            setLoading(true);
+            setError('');
             try {
                 const response = await api.get('/bookmarks');
                 setBookmarks(response.data);
+                console.log('Bookmark berhasil dimuat:', response.data); // Log data yang berhasil dimuat
             } catch (err) {
                 console.error('Gagal memuat bookmark:', err);
-                setError('Gagal memuat bookmark Anda. Silakan coba lagi nanti.');
+                if (err.response) {
+                    console.error('Respons Error Backend:', err.response.data);
+                    console.error('Status Error Backend:', err.response.status);
+                    if (err.response.status === 401 || err.response.status === 403) {
+                        setError('Sesi Anda telah berakhir atau Anda tidak diizinkan. Silakan login kembali.');
+                    } else {
+                        setError(`Gagal memuat bookmark Anda: ${err.response.data.message || 'Terjadi kesalahan server.'}`);
+                    }
+                } else if (err.request) {
+                    setError('Tidak ada respons dari server. Periksa koneksi atau status backend.');
+                } else {
+                    setError('Terjadi kesalahan saat menyiapkan permintaan. Silakan coba lagi.');
+                }
             } finally {
                 setLoading(false);
             }
         };
         fetchBookmarks();
-    }, [isLoggedIn]); // Bergantung pada status login
+    }, [isLoggedIn]);
 
     const handleRemoveBookmark = async (recipeId) => {
-        if (!isLoggedIn) { // Pengecekan keamanan tambahan
+        if (!isLoggedIn) {
             alert('Anda harus login untuk menghapus bookmark.');
             return;
         }
         if (window.confirm('Apakah Anda yakin ingin menghapus bookmark ini?')) {
             try {
-                await api.delete(`/bookmarks/${recipeId}`);
+                const response = await api.delete(`/bookmarks/${recipeId}`);
                 setBookmarks(bookmarks.filter(b => b.recipeId !== recipeId));
-                alert('Bookmark berhasil dihapus!');
+                alert(response.data.message || 'Bookmark berhasil dihapus!');
             } catch (err) {
                 console.error('Gagal menghapus bookmark:', err.response?.data?.message || err.message);
                 alert('Gagal menghapus bookmark: ' + (err.response?.data?.message || 'Silakan coba lagi.'));
@@ -50,7 +64,6 @@ const MyBookmarks = () => {
 
     if (loading) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Memuat bookmark...</div>;
     if (error) return <div style={{ textAlign: 'center', color: 'red', marginTop: '2rem' }}>{error}</div>;
-    // Tampilkan pesan khusus jika tidak login
     if (!isLoggedIn) return <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '1.2rem' }}>Silakan login untuk melihat bookmark Anda.</div>;
 
 
@@ -63,13 +76,18 @@ const MyBookmarks = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {bookmarks.map((bookmark) => (
                         <div key={bookmark.id} style={{ display: 'flex', alignItems: 'center', border: '1px solid #eee', padding: '1rem', borderRadius: '8px', background: '#f9f9f9' }}>
-                            <Link to={`/recipes/${bookmark.recipe.id}`} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
-                                <img src={bookmark.recipe.image} alt={bookmark.recipe.title} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '5px', marginRight: '1rem' }} />
-                                <div>
-                                    <h3 style={{ margin: 0 }}>{bookmark.recipe.title}</h3>
-                                    <p style={{ fontSize: '0.9rem', color: '#666', margin: '0.2rem 0' }}>Disimpan pada: {new Date(bookmark.createdAt).toLocaleDateString()}</p>
-                                </div>
-                            </Link>
+                            {/* Pastikan bookmark.recipe ada sebelum mencoba mengakses propertinya */}
+                            {bookmark.recipe ? (
+                                <Link to={`/recipes/${bookmark.recipe.id}`} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
+                                    <img src={bookmark.recipe.image} alt={bookmark.recipe.title} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '5px', marginRight: '1rem' }} />
+                                    <div>
+                                        <h3 style={{ margin: 0 }}>{bookmark.recipe.title}</h3>
+                                        <p style={{ fontSize: '0.9rem', color: '#666', margin: '0.2rem 0' }}>Disimpan pada: {new Date(bookmark.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div style={{ flexGrow: 1 }}>Resep tidak tersedia</div>
+                            )}
                             <button
                                 onClick={() => handleRemoveBookmark(bookmark.recipe.id)}
                                 style={{ padding: '0.5rem 1rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}

@@ -15,11 +15,10 @@ const Navbar = () => {
         <nav style={{ padding: '1rem', background: '#333', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Link to="/login" style={{ color: 'white', textDecoration: 'none', fontSize: '1.5rem' }}>ResepAmba</Link>
             <div>
-               
+                
                 {isLoggedIn ? (
-    
                     <>
-                     <Link to="/recipes" style={{ color: 'white', textDecoration: 'none', marginLeft: '1rem' }}>Resep</Link>
+                        <Link to="/recipes" style={{ color: 'white', textDecoration: 'none', marginLeft: '1rem' }}>Resep</Link>
                         {user?.role === 'admin' && ( //
                             <Link to="/recipes/add" style={{ color: 'white', textDecoration: 'none', marginLeft: '1rem' }}>Tambah Resep</Link>
                         )}

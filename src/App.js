@@ -22,19 +22,23 @@ function App() {
                 <Navbar />
                 <div style={{ paddingTop: '20px' }}>
                     <Routes>
+                        <Route path="/" element={<Navigate to="/recipes" replace />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route element={<PrivateRoute allowedRoles={['user', 'admin']} />}>
                             <Route path="/recipes" element={<RecipeList />} />
-                            <Route path="/recipes/:id" element={<RecipeDetail />} /> 
+                            <Route path="/recipes/:id" element={<RecipeDetail />} /> {/* Detail resep juga di bawah perlindungan login */}
                             <Route path="/bookmarks" element={<MyBookmarks />} />
                             <Route path="/ratings/my" element={<MyRatings />} />
                             <Route path="/profile" element={<UserProfile />} />
                         </Route>
+
+                        {/* Rute Terlindungi: Khusus Admin */}
                         <Route element={<PrivateRoute allowedRoles={['admin']} />}>
                             <Route path="/recipes/add" element={<AddRecipe />} />
                             <Route path="/recipes/edit/:id" element={<EditRecipe />} />
                         </Route>
+
                         <Route path="*" element={<div>404 Not Found</div>} />
                     </Routes>
                 </div>

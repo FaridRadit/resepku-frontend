@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api/index.js';
-import { useAuth } from '../auth/AuthContext';
-import CommentSection from '../components/CommentSection';
-import RatingStars from '../components/RatingStars';
+import api from '../api/index.js'; // PASTIKAN FILE INI ADA DI src/api/index.js
+import { useAuth } from '../auth/AuthContext.js'; // PASTIKAN FILE INI ADA DI src/auth/AuthContext.js
+import CommentSection from '../components/CommentSection.js'; // PASTIKAN FILE INI ADA DI src/components/CommentSection.js
+import RatingStars from '../components/RatingStars.js'; // PASTIKAN FILE INI ADA DI src/components/RatingStars.js
 
 const RecipeDetail = () => {
     const { id } = useParams();
