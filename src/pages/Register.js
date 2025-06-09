@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/index.js'; 
-import background from '../asset/backgroundregister.jpg';
+import { useAuth } from '../auth/AuthContext.js'; 
 
 const Register = () => {
     const [name, setName] = useState('');
@@ -10,6 +10,14 @@ const Register = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const { isLoggedIn } = useAuth(); 
+
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            navigate('/recipes', { replace: true });
+        }
+    }, [isLoggedIn, navigate]); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,8 +27,8 @@ const Register = () => {
         try {
             const response = await api.post('/auth/register', { name, email, password });
             setSuccess(response.data.message);
-            // Opsional, arahkan ke halaman login setelah registrasi berhasil
-            setTimeout(() => navigate('/login'), 2000);
+           
+            setTimeout(() => navigate('/login'), 2000); 
         } catch (err) {
             setError(err.response?.data?.message || 'Registrasi gagal. Silakan coba lagi.');
         }
@@ -32,17 +40,17 @@ const Register = () => {
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: '100vh',
-            // Gambar latar belakang bertema masak-masak yang berbeda dari Login
-           background: `url(${background}) no-repeat center center/cover`,
+            
+            background: 'url(https://images.unsplash.com/photo-1543336440-a35b1d9b3b5c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D) no-repeat center center/cover', 
             color: 'white'
         }}>
             <div style={{
-                background: 'rgba(0, 0, 0, 0.8)', // Sedikit lebih gelap untuk kontras
-                padding: '2.5rem', // Sedikit lebih banyak padding
-                borderRadius: '12px', // Sedikit lebih bulat
-                width: '320px', // Sedikit lebih lebar
+                background: 'rgba(0, 0, 0, 0.8)', 
+                padding: '2.5rem', 
+                borderRadius: '12px', 
+                width: '320px', 
                 textAlign: 'center',
-                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)' // Tambah shadow
+                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)' 
             }}>
                 <h2 style={{ fontSize: '1.8rem', marginBottom: '1.5rem' }}>Daftarkan Akun Anda</h2>
                 {error && <p style={{ color: '#ff6b6b', marginBottom: '1rem' }}>{error}</p>}
@@ -99,7 +107,7 @@ const Register = () => {
                             padding: '1rem', 
                             borderRadius: '8px', 
                             border: 'none', 
-                            background: '#7cb342', // Warna hijau yang sama dengan Login
+                            background: '#7cb342', 
                             color: 'white', 
                             fontSize: '1.1rem',
                             fontWeight: 'bold',

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api/index.js';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.js';
-import RatingStars from '../components/RatingStars.js'; // Reusing the RatingStars component
+import RatingStars from '../components/RatingStars.js'; 
 
 const MyRatings = () => {
     const { isLoggedIn } = useAuth();

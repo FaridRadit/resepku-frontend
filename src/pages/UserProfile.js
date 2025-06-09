@@ -3,7 +3,7 @@ import api from '../api/index.js';
 import { useAuth } from '../auth/AuthContext.js';
 
 const UserProfile = () => {
-    const { user, isLoggedIn, setUser } = useAuth(); // Mengasumsikan setUser diekspos oleh AuthContext
+    const { user, isLoggedIn, setUser } = useAuth(); 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
@@ -13,7 +13,7 @@ const UserProfile = () => {
     useEffect(() => {
         if (isLoggedIn && user) {
             setName(user.name || '');
-            setEmail(user.email || ''); // Email tidak dapat diedit, tetapi bagus untuk ditampilkan
+            setEmail(user.email || ''); 
             setLoading(false);
         } else if (!isLoggedIn && !user) {
             setError('Anda harus login untuk melihat profil.');
@@ -42,7 +42,7 @@ const UserProfile = () => {
             setSuccess(response.data.message);
             // Perbarui data pengguna di AuthContext dan localStorage
             if (response.data.user) {
-                setUser(response.data.user); // Perbarui pengguna di AuthContext
+                setUser(response.data.user); 
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             }
         } catch (err) {

@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/index.js';
-import { useAuth } from '../auth/AuthContext.js'; // Import useAuth
+import { useAuth } from '../auth/AuthContext.js'; 
 
 const EditRecipe = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { isLoggedIn, user } = useAuth(); // Dapatkan status login dan pengguna
+    const { isLoggedIn, user } = useAuth(); 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [time, setTime] = useState('');
-    const [image, setImage] = useState(null); // Untuk file gambar baru
-    const [currentImageUrl, setCurrentImageUrl] = useState(''); // Untuk menampilkan gambar saat ini
+    const [image, setImage] = useState(null); 
+    const [currentImageUrl, setCurrentImageUrl] = useState(''); 
     const [ingredients, setIngredients] = useState([]);
     const [instructions, setInstructions] = useState([]);
     const [error, setError] = useState('');

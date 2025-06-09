@@ -6,7 +6,7 @@ const PrivateRoute = ({ allowedRoles }) => {
     const { isLoggedIn, user, loading } = useAuth();
 
     if (loading) {
-        return <div>Loading authentication...</div>; // Or a spinner
+        return <div>Loading authentication...</div>; 
     }
 
     if (!isLoggedIn) {

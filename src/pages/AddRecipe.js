@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/index.js';
-import { useAuth } from '../auth/AuthContext'; // Import useAuth
+import { useAuth } from '../auth/AuthContext'; 
 
 const AddRecipe = () => {
     const navigate = useNavigate();
-    const { isLoggedIn, user } = useAuth(); // Dapatkan status login dan pengguna
+    const { isLoggedIn, user } = useAuth(); 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [time, setTime] = useState('');

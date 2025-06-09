@@ -19,7 +19,7 @@ const RatingStars = ({ recipeId, initialRating, onRatingChange }) => {
         try {
             const res = await api.post(`/ratings/recipe/${recipeId}`, { rating: index });
             setRating(index);
-            onRatingChange(index); // Notify parent component (RecipeDetail)
+            onRatingChange(index); 
             alert(res.data.message);
         } catch (error) {
             console.error('Failed to rate recipe:', error.response?.data?.message || error.message);

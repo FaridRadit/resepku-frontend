@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api/index.js'; // PASTIKAN FILE INI ADA DI src/api/index.js
+import api from '../api/index.js';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext.js'; // PASTIKAN FILE INI ADA DI src/auth/AuthContext.js
+import { useAuth } from '../auth/AuthContext.js';
 
 const MyBookmarks = () => {
     const { isLoggedIn } = useAuth();

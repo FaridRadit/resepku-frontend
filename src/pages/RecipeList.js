@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/index.js'; 
 
-import { useAuth } from '../auth/AuthContext.js'; // PASTIKAN FILE INI ADA DI src/auth/AuthContext.js
-import RecipeCard from '../components/RecipeCard.js'; // PASTIKAN FILE INI ADA DI src/components/RecipeCard.js
+import { useAuth } from '../auth/AuthContext.js';
+import RecipeCard from '../components/RecipeCard.js'; 
 
 const RecipeList = () => {
     const [recipes, setRecipes] = useState([]);
