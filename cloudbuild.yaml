@@ -1,61 +1,27 @@
 
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  id: Build
-  args:
-    - 'build'
-    - '-t'
-    - 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA' # Tag image untuk GCR
-    - '.' # Konteks build adalah direktori saat ini (root repo Anda)
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/resepku-frontend', '.']
 
-# Langkah 3: Mendorong Docker Image ke Container Registry (GCR)
-- name: 'gcr.io/cloud-builders/docker'
-  id: Push
-  args:
-    - 'push'
-    - 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA'
+  # Step 2: Push image ke Google Container Registry (GCR)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/resepku-frontend']
 
-# Langkah 4: Mendeploy Image ke Cloud Run
-# Dalam skenario ini, aplikasi Anda di dalam container akan membaca file .env yang telah disalin.
-# Oleh karena itu, kita TIDAK perlu menyetel variabel lingkungan secara eksplisit dengan --set-env-vars
-# atau --set-secrets di sini, kecuali ada variabel yang Anda inginkan untuk Cloud Run injeksikan.
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: Deploy
-  args:
-    - 'run'
-    - 'deploy'
-    - 'resepfrontend' # Nama layanan Cloud Run Anda (sesuaikan)
-    - '--image'
-    - 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA'
-    - '--region'
-    - 'asia-southeast2' # Region Cloud Run Anda (sesuaikan)
-    - '--platform'
-    - 'managed'
-    - '--allow-unauthenticated' # Hapus ini jika ingin endpoint Cloud Run diotorisasi oleh IAM
-    - '--timeout'
-    - '300s' # Timeout startup container
-    - '--port'
-    - '8080' # Port yang akan didengarkan aplikasi Anda di Cloud Run
-    - '--cpu'
-    - '1' # Alokasi CPU
-    - '--memory'
-    - '512Mi' # Alokasi memori
-    - '--concurrency'
-    - '80' # Konkurensi per instance
-    - '--min-instances'
-    - '0' # Skala ke 0 untuk paling murah
-    - '--max-instances'
-    - '10' # Batasi instance maksimum
-    # Jika Anda masih memiliki beberapa variabel lingkungan yang ingin Anda atur langsung oleh Cloud Run,
-    # daripada membacanya dari .env di dalam container, Anda bisa menambahkannya di sini.
-    # Contoh:
-    # - '--set-env-vars'
-    # - |
-    #   NODE_ENV=production,
-    #   SOME_OTHER_VAR=value_here
+  # Step 3: Deploy ke Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'resepku-frontend' # Ganti dengan nama service Cloud Run kamu
+      - '--image=gcr.io/$PROJECT_ID/resepku-frontend'
+      - '--platform=managed'
+      - '--region=us-central1' # Ganti dengan region sesuai kebutuhan
+      - '--allow-unauthenticated'
 
 images:
-- 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/resepku-frontend'
 
 options:
   logging: CLOUD_LOGGING_ONLY
