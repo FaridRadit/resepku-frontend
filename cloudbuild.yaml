@@ -24,3 +24,8 @@ images:
   - 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}'
   # Atau jika Anda menggunakan Artifact Registry:
   # - 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: "1600s"
