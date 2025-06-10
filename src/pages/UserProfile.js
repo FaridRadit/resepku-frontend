@@ -1,3 +1,4 @@
+// UserProfile.js
 import React, { useState, useEffect } from 'react';
 import api from '../api/index.js';
 import { useAuth } from '../auth/AuthContext.js';

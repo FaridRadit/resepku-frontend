@@ -1,3 +1,4 @@
+// RatingStars.js
 import React, { useState, useEffect } from 'react';
 import api from '../api/index.js';
 import { useAuth } from '../auth/AuthContext.js';
@@ -43,9 +44,11 @@ const RatingStars = ({ recipeId, initialRating, onRatingChange }) => {
                             background: 'none',
                             border: 'none',
                             cursor: isLoggedIn ? 'pointer' : 'default',
-                            color: index <= (hover || rating) ? '#ffc107' : '#e4e5e9',
-                            fontSize: '2rem',
-                            pointerEvents: isLoggedIn ? 'auto' : 'none' // Disable click if not logged in
+                            color: index <= (hover || rating) ? '#FFD700' : '#CCCCCC', // Gold for 'on', light gray for 'off'
+                            fontSize: '2.2rem', // Slightly larger stars
+                            pointerEvents: isLoggedIn ? 'auto' : 'none', // Disable click if not logged in
+                            transition: 'color 0.2s ease-in-out', // Smooth color transition
+                            outline: 'none' // Remove outline on focus
                         }}
                     >
                         <span className="star">&#9733;</span>

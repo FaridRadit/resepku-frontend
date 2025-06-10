@@ -1,3 +1,4 @@
+// PrivateRoute.js
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.js';
@@ -6,7 +7,18 @@ const PrivateRoute = ({ allowedRoles }) => {
     const { isLoggedIn, user, loading } = useAuth();
 
     if (loading) {
-        return <div>Loading authentication...</div>; 
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                minHeight: '80vh', 
+                fontSize: '1.5rem', 
+                color: '#555' 
+            }}>
+                Loading authentication...
+            </div>
+        ); 
     }
 
     if (!isLoggedIn) {

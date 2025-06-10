@@ -1,3 +1,4 @@
+// RecipeDetail.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/index.js';
