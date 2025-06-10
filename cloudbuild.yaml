@@ -1,31 +1,63 @@
-steps:
-  # Tahap 1: Membangun image Docker
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}'
-      - '.' # Context build adalah direktori saat ini (RESEPKU-FRONTEND)
-    # Atau jika Anda menggunakan Artifact Registry (ganti REGION dan REPOSITORY_NAME):
-    # args:
-    #   - 'build'
-    #   - '-t'
-    #   - 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}'
-    #   - '.'
-    timeout: '900s' # Waktu timeout untuk build (15 menit)
 
-  # Tahap 2: Mendorong image Docker ke Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}']
-    # Atau jika Anda menggunakan Artifact Registry:
-    # args: ['push', 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}']
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: Build
+  args:
+    - 'build'
+    - '-t'
+    - 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA' # Tag image untuk GCR
+    - '.' # Konteks build adalah direktori saat ini (root repo Anda)
+
+# Langkah 3: Mendorong Docker Image ke Container Registry (GCR)
+- name: 'gcr.io/cloud-builders/docker'
+  id: Push
+  args:
+    - 'push'
+    - 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA'
+
+# Langkah 4: Mendeploy Image ke Cloud Run
+# Dalam skenario ini, aplikasi Anda di dalam container akan membaca file .env yang telah disalin.
+# Oleh karena itu, kita TIDAK perlu menyetel variabel lingkungan secara eksplisit dengan --set-env-vars
+# atau --set-secrets di sini, kecuali ada variabel yang Anda inginkan untuk Cloud Run injeksikan.
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: Deploy
+  args:
+    - 'run'
+    - 'deploy'
+    - 'resepfrontend' # Nama layanan Cloud Run Anda (sesuaikan)
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA'
+    - '--region'
+    - 'asia-southeast2' # Region Cloud Run Anda (sesuaikan)
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated' # Hapus ini jika ingin endpoint Cloud Run diotorisasi oleh IAM
+    - '--timeout'
+    - '300s' # Timeout startup container
+    - '--port'
+    - '8080' # Port yang akan didengarkan aplikasi Anda di Cloud Run
+    - '--cpu'
+    - '1' # Alokasi CPU
+    - '--memory'
+    - '512Mi' # Alokasi memori
+    - '--concurrency'
+    - '80' # Konkurensi per instance
+    - '--min-instances'
+    - '0' # Skala ke 0 untuk paling murah
+    - '--max-instances'
+    - '10' # Batasi instance maksimum
+    # Jika Anda masih memiliki beberapa variabel lingkungan yang ingin Anda atur langsung oleh Cloud Run,
+    # daripada membacanya dari .env di dalam container, Anda bisa menambahkannya di sini.
+    # Contoh:
+    # - '--set-env-vars'
+    # - |
+    #   NODE_ENV=production,
+    #   SOME_OTHER_VAR=value_here
 
 images:
-  - 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}'
-  # Atau jika Anda menggunakan Artifact Registry:
-  # - 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}'
+- 'gcr.io/$PROJECT_ID/resepfrontend:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
-timeout: "1600s"
+timeout: "1600s" 
