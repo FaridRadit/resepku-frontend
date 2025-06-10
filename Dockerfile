@@ -1,36 +1,47 @@
-# Tahap pembangunan (build stage)
-# Menggunakan Node.js 18 berbasis Alpine
-FROM node:18-alpine as builder
+# --- Frontend - Builder Stage ---
+# Use a slim Node.js 20 image for building your React application.
+FROM node:20-slim AS frontend-builder
 
-# Set direktori kerja di dalam container
+# Set the working directory inside the container.
+# This is the root where your 'resepsku-frontend' directory resides.
+WORKDIR /app
+
+# Copy package.json and package-lock.json first for better caching.
+# We copy them specifically into the 'resepsku-frontend' directory.
+COPY resepsku-frontend/package*.json ./resepsku-frontend/
+
+# Navigate into the React project directory.
 WORKDIR /app/resepsku-frontend
 
-# Salin package.json dan package-lock.json terlebih dahulu untuk memanfaatkan cache Docker
-COPY resepsku-frontend/package.json ./
-COPY resepsku-frontend/package-lock.json ./
-
-# Instal dependensi
+# Install frontend dependencies.
 RUN npm install
 
-# Salin sisa kode aplikasi
-COPY resepsku-frontend/. ./
+# Copy the rest of your React application code.
+# This copies everything from your local 'resepsku-frontend' to '/app/resepsku-frontend' in the container.
+COPY . .
 
-# Jalankan build aplikasi React
+# Build the React application for production.
+# This typically creates a 'build' folder with optimized static assets.
 RUN npm run build
 
-# Tahap produksi (production stage)
-# Menggunakan Nginx berbasis Alpine untuk melayani file statis
+# --- Frontend - Production Stage ---
+# Use a lightweight Nginx based on Alpine to serve the static files.
 FROM nginx:alpine
 
-# Salin hasil build dari tahap pembangunan ke direktori default Nginx
-COPY --from=builder /app/resepsku-frontend/build /usr/share/nginx/html
+# Remove the default Nginx configuration file to use our custom one.
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Opsional: Salin konfigurasi Nginx kustom jika Anda memilikinya
-# Pastikan file nginx.conf berada di root folder RESEPKU-FRONTEND
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Optional: Copy your custom Nginx configuration if you have one.
+# Make sure your 'nginx.conf' is located in the root of your 'resepsku-frontend' project
+# (e.g., './resepsku-frontend/nginx.conf').
+COPY resepsku-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Ekspos port 80
+# Copy the built React static files to Nginx's default webroot.
+# The 'build' folder is created by 'npm run build'.
+COPY --from=frontend-builder /app/resepsku-frontend/build /usr/share/nginx/html
+
+# Expose port 80, the standard HTTP port for Nginx.
 EXPOSE 80
 
-# Jalankan Nginx saat container dimulai
+# Command to start Nginx when the container launches.
 CMD ["nginx", "-g", "daemon off;"]
