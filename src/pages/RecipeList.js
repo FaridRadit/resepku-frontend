@@ -53,14 +53,19 @@ const RecipeList = () => {
 
     return (
         <div style={{ padding: '2rem' }}>
-            <h1 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Menu Resep</h1>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <h1 style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '2.5rem', color: '#333' }}>Menu Resep</h1>
+            <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                justifyContent: 'center',
+                gap: '1.5rem' // Add gap between cards for better spacing
+            }}>
                 {recipes.length > 0 ? (
                     recipes.map((recipe) => (
                         <RecipeCard key={recipe.id} recipe={recipe} onDelete={handleDelete} isAdmin={isAdmin} />
                     ))
                 ) : (
-                    <p style={{ textAlign: 'center' }}>Belum ada resep yang tersedia.</p>
+                    <p style={{ textAlign: 'center', fontSize: '1.1rem', color: '#555' }}>Belum ada resep yang tersedia.</p>
                 )}
             </div>
         </div>
