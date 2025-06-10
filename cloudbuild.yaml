@@ -1,0 +1,26 @@
+steps:
+  # Tahap 1: Membangun image Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}'
+      - '.' # Context build adalah direktori saat ini (RESEPKU-FRONTEND)
+    # Atau jika Anda menggunakan Artifact Registry (ganti REGION dan REPOSITORY_NAME):
+    # args:
+    #   - 'build'
+    #   - '-t'
+    #   - 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}'
+    #   - '.'
+    timeout: '900s' # Waktu timeout untuk build (15 menit)
+
+  # Tahap 2: Mendorong image Docker ke Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}']
+    # Atau jika Anda menggunakan Artifact Registry:
+    # args: ['push', 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}']
+
+images:
+  - 'gcr.io/${PROJECT_ID}/resepsku-frontend:${COMMIT_SHA}'
+  # Atau jika Anda menggunakan Artifact Registry:
+  # - 'REGION-docker.pkg.dev/${PROJECT_ID}/REPOSITORY_NAME/resepsku-frontend:${COMMIT_SHA}'

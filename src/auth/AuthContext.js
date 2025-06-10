@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import api from '../api/index.js'; // Use the configured axios instance
-// import Cookies from 'js-cookie'; // Menghapus impor ini jika tidak ada kebutuhan lain
+import api from '../api/index.js'; 
+
 
 const AuthContext = createContext(null);
 
@@ -47,19 +47,16 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            // Backend's logout expects refresh token in Authorization header.
-            // Kita akan menggunakan access token yang saat ini disimpan untuk memicu logout backend,
-            // mengasumsikan backend memvalidasinya dan kemudian menghapus refresh token-nya.
             const accessToken = localStorage.getItem('accessToken');
             await api.post('/auth/logout', {}, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
-                withCredentials: true // Pastikan cookie dikirim, karena refreshToken adalah httpOnly
+                withCredentials: true 
             });
         } catch (error) {
             console.error('Logout gagal (backend):', error.response?.data?.message || error.message);
-            // Meskipun logout backend gagal, hapus status sisi klien
+            
         } finally {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');

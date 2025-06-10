@@ -8,23 +8,20 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { login, isLoggedIn } = useAuth(); // Dapatkan status isLoggedIn
+    const { login, isLoggedIn } = useAuth(); 
 
-    // Efek untuk mengalihkan jika sudah login
+    
     useEffect(() => {
         if (isLoggedIn) {
-            navigate('/recipes', { replace: true }); // Arahkan ke /recipes dan ganti entri riwayat
+            navigate('/recipes', { replace: true }); 
         }
-    }, [isLoggedIn, navigate]); // Bergantung pada isLoggedIn dan navigate
+    }, [isLoggedIn, navigate]); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         const success = await login(email, password);
         if (success) {
-            // Setelah login berhasil, useEffect akan menangani pengalihan
-            // ke halaman daftar resep secara otomatis.
-            // Tidak perlu navigate di sini karena useEffect sudah ada
         } else {
             setError('Login gagal. Periksa email dan password Anda.');
         }
@@ -36,8 +33,6 @@ const Login = () => {
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: '100vh',
-            // Gambar latar belakang bertema masak-masak dari Unsplash (contoh URL gambar langsung)
-            // Anda HARUS mengganti ini dengan URL gambar langsung yang valid dari Unsplash atau sumber lain.
             background: 'url(https://images.unsplash.com/photo-1543336440-a35b1d9b3b5c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D) no-repeat center center/cover', 
             color: 'white'
         }}>

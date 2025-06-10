@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api/index.js'; 
-import { useAuth } from '../auth/AuthContext.js'; 
-import CommentSection from '../components/CommentSection.js'; 
+import api from '../api/index.js';
+import { useAuth } from '../auth/AuthContext.js';
+import CommentSection from '../components/CommentSection.js';
 import RatingStars from '../components/RatingStars.js';
 
 const RecipeDetail = () => {
@@ -15,6 +15,17 @@ const RecipeDetail = () => {
     const [userRating, setUserRating] = useState(0); // Untuk rating pengguna sendiri
     const [isBookmarked, setIsBookmarked] = useState(false); // Untuk melacak status bookmark
 
+    // Function to fetch only the average rating, memoized with useCallback
+    const fetchAverageRating = useCallback(async () => {
+        try {
+            const avgRatingRes = await api.get(`/ratings/recipe/${id}`);
+            setAverageRating(avgRatingRes.data.average);
+            console.log('Rating rata-rata berhasil dimuat:', avgRatingRes.data);
+        } catch (err) {
+            console.error('Gagal memuat rating rata-rata:', err.response?.data || err.message);
+        }
+    }, [id]); // Dependency on id
+
     const fetchRecipeAndData = async () => {
         setLoading(true);
         setError(''); // Reset pesan kesalahan
@@ -25,12 +36,11 @@ const RecipeDetail = () => {
             setRecipe(recipeRes.data);
             console.log('Resep berhasil dimuat:', recipeRes.data);
 
-            // Ambil rating rata-rata
-            const avgRatingRes = await api.get(`/ratings/recipe/${id}`);
-            setAverageRating(avgRatingRes.data.average);
-            console.log('Rating rata-rata berhasil dimuat:', avgRatingRes.data);
+            // Ambil rating rata-rata (call the memoized function)
+            await fetchAverageRating();
 
-            if (isLoggedIn) {
+            // Fetch user-specific data only if logged in and not an admin
+            if (isLoggedIn && user?.role !== 'admin') {
                 // Periksa apakah pengguna telah memberi rating resep ini
                 try {
                     const userRatingsRes = await api.get('/ratings/my');
@@ -39,7 +49,6 @@ const RecipeDetail = () => {
                     console.log('Rating pengguna berhasil dimuat:', userRatingsRes.data);
                 } catch (err) {
                     console.error('Gagal memuat rating pengguna:', err.response?.data || err.message);
-                    // Lanjutkan eksekusi meskipun rating pengguna gagal dimuat
                 }
 
                 // Periksa apakah pengguna telah membookmark resep ini
@@ -50,28 +59,24 @@ const RecipeDetail = () => {
                     console.log('Bookmark pengguna berhasil dimuat:', userBookmarksRes.data);
                 } catch (err) {
                     console.error('Gagal memuat bookmark pengguna:', err.response?.data || err.message);
-                    // Lanjutkan eksekusi meskipun bookmark pengguna gagal dimuat
                 }
             } else {
+                // If not logged in or is admin, reset user-specific states
                 setUserRating(0);
                 setIsBookmarked(false);
             }
 
         } catch (err) {
-            // Tangani error secara umum dan log objek error lengkap
             console.error('Terjadi kesalahan saat memuat data resep:', err);
             if (err.response) {
-                // Error dari server (misalnya, status code 4xx, 5xx)
                 console.error('Data Respons Error:', err.response.data);
                 console.error('Status Error:', err.response.status);
                 console.error('Headers Error:', err.response.headers);
                 setError(`Gagal memuat resep: ${err.response.data.message || err.message}. Mohon periksa backend.`);
             } else if (err.request) {
-                // Permintaan dibuat tetapi tidak ada respons yang diterima
                 console.error('Permintaan Error:', err.request);
                 setError('Tidak ada respons dari server. Server mungkin tidak berjalan atau ada masalah jaringan.');
             } else {
-                // Sesuatu terjadi dalam penyiapan permintaan yang memicu Error
                 console.error('Pesan Error:', err.message);
                 setError(`Terjadi kesalahan saat memuat resep: ${err.message}.`);
             }
@@ -82,50 +87,27 @@ const RecipeDetail = () => {
 
     useEffect(() => {
         fetchRecipeAndData();
-    }, [id, isLoggedIn]); // Muat ulang jika id atau status login berubah
+    }, [id, isLoggedIn, user?.role, fetchAverageRating]); // Add fetchAverageRating to dependencies
 
+    // This function will be called by RatingStars ONLY AFTER the rating is successfully saved
     const handleRatingChange = (newRating) => {
-        setUserRating(newRating);
-        // Penundaan kecil dan pengambilan ulang rating rata-rata untuk mencerminkan perubahan
-        setTimeout(async () => {
-            try {
-                const avgRatingRes = await api.get(`/ratings/recipe/${id}`);
-                setAverageRating(avgRatingRes.data.average);
-            } catch (err) {
-                console.error('Gagal me-refresh rating rata-rata:', err);
-            }
-        }, 500);
+        setUserRating(newRating); // Update local state immediately for responsiveness
+        // Now, re-fetch the average rating to reflect the latest changes from the backend
+        fetchAverageRating();
     };
 
     const handleBookmark = async () => {
-        if (!isLoggedIn) {
-            alert('Silakan login untuk bookmark resep.');
+        if (!isLoggedIn || user?.role === 'admin') {
+            alert('Anda tidak diizinkan untuk melakukan aksi ini.');
             return;
         }
         try {
-            await api.post('/bookmarks', { recipeId: parseInt(id) });
+            await api.post('/bookmarks/bookmarks', { recipeId: parseInt(id) });
             setIsBookmarked(true);
             alert('Resep berhasil dibookmark!');
         } catch (err) {
             console.error('Gagal menambahkan bookmark:', err.response?.data?.message || err.message);
             alert('Gagal bookmark resep: ' + (err.response?.data?.message || 'Silakan coba lagi.'));
-        }
-    };
-
-    const handleRemoveBookmark = async () => {
-        if (!isLoggedIn) {
-            alert('Silakan login untuk menghapus bookmark.');
-            return;
-        }
-        if (window.confirm('Apakah Anda yakin ingin menghapus bookmark ini?')) {
-            try {
-                await api.delete(`/bookmarks/${id}`);
-                setIsBookmarked(false);
-                alert('Bookmark berhasil dihapus!');
-            } catch (err) {
-                console.error('Gagal menghapus bookmark:', err.response?.data?.message || err.message);
-                alert('Gagal menghapus bookmark: ' + (err.response?.data?.message || 'Silakan coba lagi.'));
-            }
         }
     };
 
@@ -179,18 +161,21 @@ const RecipeDetail = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                 <p style={{ margin: 0 }}>Rating Rata-rata: {averageRating.toFixed(1)} / 5</p>
                 {renderAverageStars(averageRating)} {/* Menampilkan bintang rata-rata */}
-                {/* Komponen RatingStars di bawah ini adalah untuk pengguna memberi/mengubah rating mereka sendiri */}
-                <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Rating Anda:</span>
-                <RatingStars recipeId={recipe.id} initialRating={userRating} onRatingChange={handleRatingChange} />
-                {isLoggedIn && ( // Hanya tampilkan tombol bookmark jika pengguna sudah login
+
+                {/* Conditional rendering for user's rating and bookmark buttons */}
+                {isLoggedIn && !isAdmin && ( // Only show if logged in AND NOT admin
                     <>
+                        <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Rating Anda:</span>
+                        <RatingStars recipeId={recipe.id} initialRating={userRating} onRatingChange={handleRatingChange} />
                         {!isBookmarked ? (
                             <button onClick={handleBookmark} style={{ padding: '0.5rem 1rem', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Bookmark</button>
                         ) : (
-                            <button onClick={handleRemoveBookmark} style={{ padding: '0.5rem 1rem', background: '#ffc107', color: '#333', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Hapus Bookmark</button>
+                            // Removed the "Hapus Bookmark" button
+                            <span style={{ color: '#666', marginLeft: '0.5rem' }}>Sudah dibookmark</span>
                         )}
                     </>
                 )}
+
                 {isAdmin && (
                     <Link to={`/recipes/edit/${recipe.id}`} style={{ padding: '0.5rem 1rem', background: '#007bff', color: 'white', textDecoration: 'none', borderRadius: '5px', marginLeft: 'auto' }}>Edit Resep</Link>
                 )}
@@ -211,7 +196,7 @@ const RecipeDetail = () => {
                 <h2 style={{ color: '#333' }}>Instruksi</h2>
                 <ol style={{ paddingLeft: '1.5rem' }}>
                     {recipe.instructions
-                        .sort((a, b) => a.order - b.order) // Memastikan instruksi dalam urutan
+                        .sort((a, b) => a.order - b.order) 
                         .map((instruction, index) => (
                             <li key={index} style={{ marginBottom: '0.8rem' }}>
                                 {instruction.description}
