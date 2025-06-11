@@ -59,13 +59,24 @@ const Navbar = () => {
                                 transition: 'color 0.3s ease' 
                             }} onMouseOver={(e) => e.target.style.color = '#f39c12'} onMouseOut={(e) => e.target.style.color = 'white'}>Bookmark Saya</Link>
                         )}
-                        <Link to="/ratings/my" style={{ 
-                            color: 'white', 
-                            textDecoration: 'none', 
-                            marginLeft: '1.5rem', 
-                            fontSize: '1.1rem',
-                            transition: 'color 0.3s ease' 
-                        }} onMouseOver={(e) => e.target.style.color = '#f39c12'} onMouseOut={(e) => e.target.style.color = 'white'}>Rating Saya</Link>
+                      {user?.role !== 'admin' && (
+  <Link 
+    to="/ratings/my" 
+    style={{ 
+      color: 'white', 
+      textDecoration: 'none', 
+      marginLeft: '1.5rem', 
+      fontSize: '1.1rem',
+      transition: 'color 0.3s ease' 
+    }} 
+    onMouseOver={(e) => (e.target.style.color = '#f39c12')} 
+    onMouseOut={(e) => (e.target.style.color = 'white')}
+  >
+    Rating Saya
+  </Link>
+)}
+
+                      
                         <Link to="/profile" style={{ 
                             color: 'white', 
                             textDecoration: 'none', 
